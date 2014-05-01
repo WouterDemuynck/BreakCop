@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--
+Copyright (c) 2008-2012 Wouter Demuynck
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this
+software and associated documentation files (the "Software"), to deal in the Software
+without restriction, including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Import the BuildTools MSBuild tasks -->
+  <UsingTask TaskName="GenerateVersion" AssemblyFile="BuildTools.MSBuildTasks.dll" />
+  <UsingTask TaskName="GenerateAssemblyInfo" AssemblyFile="BuildTools.MSBuildTasks.dll" />
+
+  <!-- Hook into the default MSBuild build process. -->
+  <PropertyGroup>
+    <CoreCompileDependsOn>$(CoreCompileDependsOn);BuildToolsGenerateAssemblyInfo</CoreCompileDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CompileDependsOn Condition="$(WixTargetsPath) != ''">$(CompileDependsOn);BuildToolsGenerateAssemblyInfo</CompileDependsOn>
+  </PropertyGroup>
+
+  <Target Name="BuildToolsGenerateAssemblyInfo">
+    <ItemGroup>
+      <ProjectFile Include="$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+
+    <CallTarget Targets="_GenerateVersion" />
+    <CallTarget Targets="_GenerateAssemblyInfo" Condition="%(ProjectFile.Extension) != '.wixproj'" />
+    <CallTarget Targets="_SetWixDefineConstants" Condition="%(ProjectFile.Extension) == '.wixproj'" />
+
+    <ItemGroup>
+      <ProjectFile Remove="$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateVersion">
+    <ItemGroup>
+      <ProjectFile Include="$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+
+    <!-- Define default values for the GenerateVersion task if not already defined. -->
+    <PropertyGroup>
+      <MajorVersion Condition=" $(MajorVersion) == '' ">1</MajorVersion>
+      <MinorVersion Condition=" $(MinorVersion) == '' ">0</MinorVersion>
+      <BuildType Condition=" $(BuildType) == '' ">YearMonthDay</BuildType>
+      <RevisionType Condition=" $(RevisionType) == '' ">HourMinute</RevisionType>
+      <StartingDate Condition=" $(StartingDate) == '' ">%(ProjectFile.CreatedTime)</StartingDate>
+      <VersionFile Condition=" $(VersionFile) == '' ">Generated.version</VersionFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectFile Remove="$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+
+    <GenerateVersion VersionFile="$(VersionFile)"
+                     Major="$(MajorVersion)" 
+                     Minor="$(MinorVersion)" 
+                     BuildType="$(BuildType)" 
+                     RevisionType="$(RevisionType)" 
+                     StartingDate="$(StartingDate)">
+      <Output TaskParameter="Version" PropertyName="AssemblyFileVersion" />
+      <Output TaskParameter="Major" PropertyName="AssemblyVersionMajor" />
+      <Output TaskParameter="Minor" PropertyName="AssemblyVersionMinor" />
+    </GenerateVersion>
+  </Target>
+
+  <Target Name="_GenerateAssemblyInfo">
+    <ItemGroup>
+      <ProjectFile Include="$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <AssemblyInfoFileExtension Condition=" %(ProjectFile.Extension) == '.csproj' ">.cs</AssemblyInfoFileExtension>
+      <AssemblyInfoFileLanguage Condition=" %(ProjectFile.Extension) == '.csproj' ">CSharp</AssemblyInfoFileLanguage>
+
+      <AssemblyInfoFileExtension Condition=" %(ProjectFile.Extension) == '.vbproj' ">.vb</AssemblyInfoFileExtension>
+      <AssemblyInfoFileLanguage Condition=" %(ProjectFile.Extension) == '.vbproj' ">VisualBasic</AssemblyInfoFileLanguage>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectFile Remove="$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <AssemblyVersionInfo Condition=" $(ServicePackNumber) != '' And $(HotfixNumber) != '' ">$(AssemblyVersionMajor).$(AssemblyVersionMinor).$(ServicePackNumber).$(HotfixNumber)</AssemblyVersionInfo>
+      <AssemblyVersionInfo Condition=" $(ServicePackNumber) != '' And $(HotfixNumber) == '' ">$(AssemblyVersionMajor).$(AssemblyVersionMinor).$(ServicePackNumber)</AssemblyVersionInfo>
+      <AssemblyVersionInfo Condition=" $(ServicePackNumber) == '' And $(HotfixNumber) != '' ">$(AssemblyVersionMajor).$(AssemblyVersionMinor).0.$(HotfixNumber)</AssemblyVersionInfo>
+      <AssemblyVersionInfo Condition=" $(ServicePackNumber) == '' And $(HotfixNumber) == '' ">$(AssemblyVersionMajor).$(AssemblyVersionMinor)</AssemblyVersionInfo>
+      
+      <AssemblyVersionInfo Condition=" $(InformationalVersionSuffix) != '' ">$(AssemblyVersionInfo) $(InformationalVersionSuffix)</AssemblyVersionInfo>
+    </PropertyGroup>
+
+    <GenerateAssemblyInfo Language="$(AssemblyInfoFileLanguage)" 
+                          FileName="AssemblyInfo.Generated$(AssemblyInfoFileExtension)" 
+                          CLSCompliant="true" 
+                          AssemblyVersion="$(AssemblyVersionMajor).$(AssemblyVersionMinor).0.0" 
+                          AssemblyFileVersion="$(AssemblyFileVersion)" 
+                          AssemblyInformationalVersion="$(AssemblyVersionInfo)"/>
+
+    <!-- Make sure the generated AssemblyInfo file will compile with the other sources. -->
+    <ItemGroup>
+      <Compile Include="AssemblyInfo.Generated$(AssemblyInfoFileExtension)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_SetWixDefineConstants">
+    <PropertyGroup>
+      <InstallerVersion Condition=" $(InstallerVersion) == '' And $(InstallerVersionType) == 'AssemblyVersion' ">$(AssemblyVersionMajor).$(AssemblyVersionMinor).0.0</InstallerVersion>
+      <InstallerVersion Condition=" $(InstallerVersion) == '' And $(InstallerVersionType) == 'AssemblyFileVersion' ">$(AssemblyFileVersion)</InstallerVersion>
+      <InstallerVersion Condition=" $(InstallerVersion) == '' And $(InstallerVersionType) == '' ">$(AssemblyVersionInfo)</InstallerVersion>
+
+      <DefineConstants>InstallerVersion=$(InstallerVersion);$(DefineConstants)</DefineConstants>
+    </PropertyGroup>
+  </Target>
+</Project>
