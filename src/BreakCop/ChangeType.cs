@@ -50,5 +50,13 @@ namespace BreakCop
         /// Indicates that the signature of an existing method has changed.
         /// </summary>
         MethodChanged,
+        /// <summary>
+        /// Indicates that a new public field was added.
+        /// </summary>
+        FieldAdded,
+        /// <summary>
+        /// Indicates that a public field has been removed.
+        /// </summary>
+        FieldRemoved,
     }
 }

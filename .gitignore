@@ -214,5 +214,4 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
-src/BreakCop.PowerShell/AssemblyInfo.Generated.cs
-src/BreakCop/AssemblyInfo.Generated.cs
+AssemblyInfo.Generated.cs

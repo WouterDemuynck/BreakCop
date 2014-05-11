@@ -17,5 +17,8 @@ namespace BreakCop
 
         public static readonly IEqualityComparer<MethodDefinition> MethodByName =
             new CallbackEqualityComparer<MethodDefinition>((x, y) => x.Name.Equals(y.Name), obj => obj.Name.GetHashCode());
+
+        public static readonly IEqualityComparer<FieldDefinition> FieldByFullName =
+            new CallbackEqualityComparer<FieldDefinition>((x, y) => x.FullName.Equals(y.FullName), obj => obj.FullName.GetHashCode());
     }
 }

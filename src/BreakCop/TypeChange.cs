@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -31,6 +32,32 @@ namespace BreakCop
             {
                 return _type.FullName;
             }
+        }
+
+        public override string ToString()
+        {
+            string format = null;
+            switch (ChangeType)
+            {
+                case BreakCop.ChangeType.TypeAdded:
+                    format = "Type {0} has been added.";
+                    break;
+
+                case BreakCop.ChangeType.TypeRemoved:
+                    format = "Type {0} has been removed.";
+                    break;
+
+                case BreakCop.ChangeType.TypeAbstracted:
+                    format = "Type {0} has been made abstract.";
+                    break;
+
+                case BreakCop.ChangeType.TypeSealed:
+                    format = "Type {0} has been sealed.";
+                    break;
+            }
+
+            if (format == null) return base.ToString();
+            return string.Format(CultureInfo.InvariantCulture, format, TypeName);
         }
     }
 }

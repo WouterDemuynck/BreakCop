@@ -1,4 +1,5 @@
 ﻿using Mono.Cecil;
+using Mono.Cecil.Pdb;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +31,27 @@ namespace BreakCop
 
             foreach (var change in CompareMethods(source, target))
                 yield return change;
+
+            foreach (var change in CompareFields(source, target))
+                yield return change;
+        }
+
+        private IEnumerable<Change> CompareFields(TypeDefinition source, TypeDefinition target)
+        {
+            var targetFields = target.Fields.Where(f => f.IsFamily || f.IsPublic || f.IsFamilyOrAssembly).ToList();
+            var sourceFields = source.Fields.Where(f => f.IsFamily || f.IsPublic || f.IsFamilyOrAssembly).ToList();
+
+            // First detect all new types in the newer assembly.
+            var addedFields = targetFields.Except(sourceFields, CecilComparer.FieldByFullName).ToList();
+            foreach (var addedField in addedFields)
+                yield return new FieldChange(ChangeType.FieldAdded, ChangeCategory.NonBreaking, CompatibilityLevel.Binary, addedField);
+            targetFields.RemoveAll(addedFields);
+
+            // Now detect all removed types in the newer assembly.
+            var removedFields = sourceFields.Except(targetFields, CecilComparer.FieldByFullName).ToList();
+            foreach (var removedType in removedFields)
+                yield return new FieldChange(ChangeType.FieldRemoved, ChangeCategory.Breaking, CompatibilityLevel.None, removedType);
+            sourceFields.RemoveAll(removedFields);
         }
 
         private IEnumerable<Change> CompareMethods(TypeDefinition source, TypeDefinition target)

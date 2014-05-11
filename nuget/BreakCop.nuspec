@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+	<metadata>
+		<id>BreakCop</id>
+		<version>0.1.0-prealpha</version>
+		<title>BreakCop</title>
+		<authors>Wouter Demuynck</authors>
+		<description>BreakCop is a tool that allows you to compare two versions of an assembly, reporting the API differences and alerting you of breaking changes.</description>
+		<language>en-US</language>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+	</metadata>
+	<files>
+		<file src="..\bin\Release\Mono.Cecil.dll" target="tools\Mono.Cecil.dll" />
+		<file src="..\bin\Release\BreakCop.dll" target="tools\BreakCop.dll" />
+		<file src="..\bin\Release\BreakCop.MSBuildTasks.dll" target="tools\BreakCop.MSBuildTasks.dll" />
+		<file src="..\bin\Release\BreakCop.targets" target="tools\BreakCop.targets" />
+		<file src="..\bin\Release\Init.ps1" target="tools\Init.ps1" />
+		<file src="..\bin\Release\Install.ps1" target="tools\Install.ps1" />
+		<file src="..\bin\Release\Uninstall.ps1" target="tools\Uninstall.ps1" />
+		<file src="..\bin\Release\README-BreakCop.txt" target="content\README-BreakCop.txt" />
+	</files>
+</package>
